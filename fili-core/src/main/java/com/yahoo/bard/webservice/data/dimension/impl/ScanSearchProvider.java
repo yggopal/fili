@@ -10,7 +10,7 @@ import com.yahoo.bard.webservice.data.dimension.FilterDimensionRows;
 import com.yahoo.bard.webservice.data.dimension.KeyValueStore;
 import com.yahoo.bard.webservice.data.dimension.SearchProvider;
 import com.yahoo.bard.webservice.util.DimensionStoreKeyUtils;
-import com.yahoo.bard.webservice.util.SinglePagePagination;
+import com.yahoo.bard.webservice.util.pagination.Pagination;
 import com.yahoo.bard.webservice.web.ApiFilter;
 import com.yahoo.bard.webservice.web.util.PaginationParameters;
 
@@ -19,11 +19,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -315,12 +314,10 @@ public class ScanSearchProvider implements SearchProvider, FilterDimensionRows {
 
     @Override
     public Pagination<DimensionRow> findAllDimensionRowsPaged(PaginationParameters paginationParameters) {
-        return new SinglePagePagination<>(
-                Collections.unmodifiableList(
-                        new ArrayList<>(getAllDimensionRowsPaged(paginationParameters))
-                ),
+        return new Pagination<>(
+                Observable.from(getAllDimensionRowsPaged(paginationParameters)),
                 paginationParameters,
-                getDimRowIndexes().size()
+                Observable.just(getDimRowIndexes().size())
         );
     }
 
@@ -330,12 +327,14 @@ public class ScanSearchProvider implements SearchProvider, FilterDimensionRows {
             PaginationParameters paginationParameters
     ) {
         TreeSet<DimensionRow> filteredDimensionRows = applyFilters(getAllOrderedDimensionRows(), filters);
-        return new SinglePagePagination<>(
-                doPagination(filteredDimensionRows, paginationParameters.getPage(), paginationParameters.getPerPage())
-                        .stream()
-                        .collect(Collectors.toList()),
+        return new Pagination<>(
+                Observable.from(doPagination(
+                        filteredDimensionRows,
+                        paginationParameters.getPage(),
+                        paginationParameters.getPerPage()
+                )),
                 paginationParameters,
-                filteredDimensionRows.size()
+                Observable.just(filteredDimensionRows.size())
         );
     }
 

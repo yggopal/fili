@@ -3,6 +3,7 @@
 package com.yahoo.bard.webservice.web;
 
 import com.yahoo.bard.webservice.application.ObjectMappersSuite;
+import com.yahoo.bard.webservice.util.pagination.Pagination;
 import com.yahoo.bard.webservice.web.responseprocessors.MappingResponseProcessor;
 import com.yahoo.bard.webservice.web.responseprocessors.ResponseContext;
 import com.yahoo.bard.webservice.web.responseprocessors.ResponseContextKeys;
@@ -109,7 +110,7 @@ public abstract class AbstractResponse<T> implements ResponseStream {
             UriBuilder uriBuilder,
             Map<String, URI> bodyLinks
     ) {
-        link.getPage(pages).ifPresent(page -> addLink(link, page, uriBuilder, bodyLinks));
+        link.getPage(pages).subscribe(page -> addLink(link, page, uriBuilder, bodyLinks));
     }
 
     /**
@@ -163,7 +164,7 @@ public abstract class AbstractResponse<T> implements ResponseStream {
             MappingResponseProcessor responseProcessor,
             Map<String, URI> bodyLinks
     ) {
-        link.getPage(pages).ifPresent(page -> addLink(link, page, uriBuilder, responseProcessor, bodyLinks));
+        link.getPage(pages).subscribe(page -> addLink(link, page, uriBuilder, responseProcessor, bodyLinks));
     }
 
     /**
@@ -225,9 +226,9 @@ public abstract class AbstractResponse<T> implements ResponseStream {
             throw new IOException(re);
         }
 
-        generator.writeNumberField("currentPage", pages.getPage());
+        generator.writeNumberField("currentPage", pages.getRequestedPageNumber());
         generator.writeNumberField("rowsPerPage", pages.getPerPage());
-        generator.writeNumberField("numberOfResults", pages.getNumResults());
+        generator.writeNumberField("numberOfResults", pages.getNumResults().toBlocking().single());
         generator.writeEndObject();
         generator.writeEndObject();
     }

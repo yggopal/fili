@@ -93,7 +93,7 @@ class PaginationMapperSpec extends Specification {
         PaginationMapper mapper = new PaginationMapper(
                 new PaginationParameters(rowsPerPage, page),
                 responseProcessor,
-                uriBuilder
+                uriBuilder, new com.yahoo.bard.webservice.util.pagination.FiliPaginator<com.yahoo.bard.webservice.data.Result>()
         )
 
         and: "The expected links in the headers and body of the response"
@@ -179,7 +179,7 @@ class PaginationMapperSpec extends Specification {
         PaginationMapper mapper = new PaginationMapper(
                 new PaginationParameters(rowsPerPage, lastPage),
                 responseProcessor,
-                uriBuilder
+                uriBuilder, new com.yahoo.bard.webservice.util.pagination.FiliPaginator<com.yahoo.bard.webservice.data.Result>()
         )
         and: "The expected data"
         ResultSet expectedPage = new ResultSet(testResults[-numLastRows..-1], testResults.getSchema())
@@ -201,7 +201,7 @@ class PaginationMapperSpec extends Specification {
         PaginationMapper paginator = new PaginationMapper(
                 new PaginationParameters(rowsPerPage, page),
                 responseProcessor,
-                uriBuilder
+                uriBuilder, new com.yahoo.bard.webservice.util.pagination.FiliPaginator<com.yahoo.bard.webservice.data.Result>()
         )
         ResultSet testResults = buildResultSet(numPages * rowsPerPage)
 

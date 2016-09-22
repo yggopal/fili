@@ -10,21 +10,20 @@ import com.yahoo.bard.webservice.config.SystemConfig;
 import com.yahoo.bard.webservice.config.SystemConfigProvider;
 import com.yahoo.bard.webservice.data.time.GranularityParser;
 import com.yahoo.bard.webservice.druid.model.query.Granularity;
-import com.yahoo.bard.webservice.util.AllPagesPagination;
 import com.yahoo.bard.webservice.util.GranularityParseException;
+import com.yahoo.bard.webservice.util.pagination.FiliPaginator;
+import com.yahoo.bard.webservice.util.pagination.Pagination;
 import com.yahoo.bard.webservice.web.util.PaginationLink;
 import com.yahoo.bard.webservice.web.util.PaginationParameters;
 
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.HttpHeaders;
@@ -311,17 +310,38 @@ public abstract class ApiRequest {
     }
 
     /**
-     * Add page links to the header of the response builder.
+     * Paginates the results, adds the pagination links to the response builder, and retuns an observable of the
+     * requested page of results.
      *
-     * @param link  The type of the link to add.
-     * @param pages  The paginated set of results containing the pages being linked to.
+     * @param results  The query results
+     * @param <T>  The type of the collection elements
+     *
+     * @return A stream corresponding to the requested page.
      */
-    protected void addPageLink(PaginationLink link, Pagination<?> pages) {
-        link.getPage(pages).ifPresent(page -> addPageLink(link, page));
+    public <T> Observable<T> getPage(Observable<T> results) {
+        Optional<Pagination<T>> pagination = paginationParameters
+                .map(parameters -> new FiliPaginator<T>().apply(results, parameters));
+
+        if (pagination.isPresent()) {
+            addPageLinks(pagination.get());
+            return pagination.get().getPageOfData();
+        } else {
+            return Observable.empty();
+        }
     }
 
     /**
-     * Add page links to the header of the response builder.
+     * Given a pagination object, adds the pagination links to the response builder.
+     *
+     * @param pagination  The page of data object whose links should be added to the response object
+     */
+    public void addPageLinks(Pagination pagination) {
+        Arrays.stream(PaginationLink.values())
+                .forEachOrdered(link -> link.getPage(pagination).subscribe(page -> addPageLink(link, page)));
+    }
+
+    /**
+     * Add the specified page link to the header of the response builder with the specified page number.
      *
      * @param link  The type of the link to add.
      * @param pageNumber  Number of the page to add the link for.
@@ -329,54 +349,6 @@ public abstract class ApiRequest {
     protected void addPageLink(PaginationLink link, int pageNumber) {
         UriBuilder uriBuilder = uriInfo.getRequestUriBuilder().replaceQueryParam("page", pageNumber);
         builder.header(HttpHeaders.LINK, Link.fromUriBuilder(uriBuilder).rel(link.getHeaderName()).build());
-    }
-
-    /**
-     * Add links to the response builder and return a stream with the requested page from the raw data.
-     *
-     * @param <T>  The type of the collection elements
-     * @param data  The data to be paginated.
-     *
-     * @return A stream corresponding to the requested page.
-     *
-     * @deprecated Pagination is moving to a Stream and pushing creation of the page to a more general
-     * method ({@link #getPage(Pagination)}) to allow for more flexibility
-     * in how pagination is done.
-     */
-    @Deprecated
-    public <T> Stream<T> getPage(Collection<T> data) {
-        return getPage(new AllPagesPagination<>(data, getPaginationParameters().orElse(getDefaultPagination())));
-    }
-
-    /**
-     * Add links to the response builder and return a stream with the requested page from the raw data.
-     *
-     * @param <T>  The type of the collection elements
-     * @param pagination  The pagination object
-     *
-     * @return A stream corresponding to the requested page.
-     */
-    public <T> Stream<T> getPage(Pagination<T> pagination) {
-        this.pagination = pagination;
-
-        Arrays.stream(PaginationLink.values()).forEachOrdered(link -> addPageLink(link, pagination));
-
-        return pagination.getPageOfData().stream();
-    }
-
-    /**
-     * This method returns a Function that can basically take a Collection and return an instance of
-     * AllPagesPagination.
-     *
-     * @param paginationParameters  The PaginationParameters to be used to generate AllPagesPagination instance
-     * @param <T>  The type of items in the Collection which needs to be paginated
-     *
-     * @return A Function that takes a Collection and returns an instance of AllPagesPagination
-     */
-    public <T> Function<Collection<T>, AllPagesPagination<T>> getAllPagesPaginationFactory(
-            PaginationParameters paginationParameters
-    ) {
-        return data -> new AllPagesPagination<>(data, paginationParameters);
     }
 
     /**

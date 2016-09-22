@@ -9,8 +9,8 @@ import com.yahoo.bard.webservice.data.dimension.DimensionRow;
 import com.yahoo.bard.webservice.data.dimension.KeyValueStore;
 import com.yahoo.bard.webservice.data.dimension.SearchProvider;
 import com.yahoo.bard.webservice.util.DimensionStoreKeyUtils;
-import com.yahoo.bard.webservice.util.SinglePagePagination;
 import com.yahoo.bard.webservice.util.Utils;
+import com.yahoo.bard.webservice.util.pagination.Pagination;
 import com.yahoo.bard.webservice.web.ApiFilter;
 import com.yahoo.bard.webservice.web.PageNotFoundException;
 import com.yahoo.bard.webservice.web.RowLimitReachedException;
@@ -39,6 +39,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.MMapDirectory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -517,7 +518,7 @@ public class LuceneSearchProvider implements SearchProvider {
         ScoreDoc[] hits = getPageOfData(indexSearcher, null, query, perPage, requestedPageNumber).scoreDocs;
         if (hits.length == 0) {
             if (requestedPageNumber == 1) {
-                return new SinglePagePagination<>(Collections.emptyList(), paginationParameters, 0);
+                return new Pagination<>(Observable.empty(), paginationParameters, Observable.just(0));
             } else {
                 throw new PageNotFoundException(requestedPageNumber, perPage, 0);
             }
@@ -547,10 +548,10 @@ public class LuceneSearchProvider implements SearchProvider {
                 .map(dimension::findDimensionRowByKeyValue)
                 .collect(Collectors.toCollection(TreeSet::new));
         try {
-            return new SinglePagePagination<>(
-                    Collections.unmodifiableList(filteredDimRows.stream().collect(Collectors.toList())),
+            return new Pagination<>(
+                    Observable.from(filteredDimRows),
                     paginationParameters,
-                    indexSearcher.count(query)
+                    Observable.just(indexSearcher.count(query))
             );
         } catch (IOException e) {
             LOG.error("Unable to get count of matched rows for the query " + query.toString() +

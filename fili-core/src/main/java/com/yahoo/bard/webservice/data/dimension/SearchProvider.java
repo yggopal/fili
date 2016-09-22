@@ -3,6 +3,7 @@
 package com.yahoo.bard.webservice.data.dimension;
 
 import com.yahoo.bard.webservice.data.cache.HashDataCache.Pair;
+import com.yahoo.bard.webservice.util.pagination.Pagination;
 import com.yahoo.bard.webservice.web.ApiFilter;
 import com.yahoo.bard.webservice.web.util.PaginationParameters;
 
@@ -49,9 +50,10 @@ public interface SearchProvider {
      */
     @Deprecated
     default Set<DimensionRow> findAllDimensionRows() {
-        return new LinkedHashSet<>(
-                findAllDimensionRowsPaged(PaginationParameters.EVERYTHING_IN_ONE_PAGE).getPageOfData()
-        );
+        return findAllDimensionRowsPaged(PaginationParameters.EVERYTHING_IN_ONE_PAGE).getPageOfData()
+                .collect(LinkedHashSet<DimensionRow>::new, LinkedHashSet::add)
+                .toBlocking()
+                .single();
     }
 
     /**
@@ -84,9 +86,10 @@ public interface SearchProvider {
      */
     @Deprecated
     default TreeSet<DimensionRow> findFilteredDimensionRows(Set<ApiFilter> filters) {
-        return new TreeSet<>(
-                findFilteredDimensionRowsPaged(filters, PaginationParameters.EVERYTHING_IN_ONE_PAGE).getPageOfData()
-        );
+            return findFilteredDimensionRowsPaged(filters, PaginationParameters.EVERYTHING_IN_ONE_PAGE).getPageOfData()
+                    .collect(TreeSet<DimensionRow>::new, TreeSet::add)
+                    .toBlocking()
+                    .single();
     }
 
     /**

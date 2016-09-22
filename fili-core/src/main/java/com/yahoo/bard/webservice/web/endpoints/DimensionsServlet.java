@@ -16,10 +16,8 @@ import com.yahoo.bard.webservice.logging.RequestLog;
 import com.yahoo.bard.webservice.logging.blocks.DimensionRequest;
 import com.yahoo.bard.webservice.table.LogicalTableDictionary;
 import com.yahoo.bard.webservice.util.StreamUtils;
-import com.yahoo.bard.webservice.web.DimensionsApiRequest;
-import com.yahoo.bard.webservice.web.RequestMapper;
-import com.yahoo.bard.webservice.web.RequestValidationException;
-import com.yahoo.bard.webservice.web.RowLimitReachedException;
+import com.yahoo.bard.webservice.util.pagination.FiliPaginator;
+import com.yahoo.bard.webservice.web.*;
 import com.yahoo.bard.webservice.web.util.PaginationParameters;
 
 import com.codahale.metrics.annotation.Timed;
@@ -27,6 +25,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -35,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -60,6 +60,7 @@ import javax.ws.rs.core.UriInfo;
 @Singleton
 public class DimensionsServlet extends EndpointServlet {
     private static final Logger LOG = LoggerFactory.getLogger(DimensionsServlet.class);
+    private static final FiliPaginator<Map<String, Object>> DIMENSION_SUMMARY_VIEW_PAGINATOR = new FiliPaginator<>();
 
     private final DimensionDictionary dimensionDictionary;
     private final LogicalTableDictionary logicalTableDictionary;
@@ -129,14 +130,19 @@ public class DimensionsServlet extends EndpointServlet {
             if (requestMapper != null) {
                 apiRequest = (DimensionsApiRequest) requestMapper.apply(apiRequest, containerRequestContext);
             }
+            DimensionsApiRequest effectivelyFinalApiRequest = apiRequest;
 
-            Stream<Map<String, Object>> result = apiRequest.getPage(
-                    getDimensionListSummaryView(apiRequest.getDimensions(), uriInfo)
+            Observable<Map<String, Object>> dimensionListSummaryView = Observable.from(
+                    getDimensionListSummaryView(effectivelyFinalApiRequest.getDimensions(), uriInfo)
             );
+
+            Observable<Map<String, Object>> result = apiRequest.getPaginationParameters()
+                    .map(paginationParameters -> effectivelyFinalApiRequest.getPage(dimensionListSummaryView))
+                    .orElse(dimensionListSummaryView);
 
             Response response = formatResponse(
                     apiRequest,
-                    result,
+                    StreamSupport.stream(result.toBlocking().toIterable().spliterator(), false),
                     UPDATED_METADATA_COLLECTION_NAMES.isOn() ? "dimensions" : "rows",
                     null
             );
