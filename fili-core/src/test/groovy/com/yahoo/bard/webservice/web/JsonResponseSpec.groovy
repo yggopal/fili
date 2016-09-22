@@ -6,7 +6,6 @@ import com.yahoo.bard.webservice.application.ObjectMappersSuite
 import com.yahoo.bard.webservice.util.GroovyTestUtils
 import com.yahoo.bard.webservice.util.JsonSlurper
 import com.yahoo.bard.webservice.util.JsonSortStrategy
-import com.yahoo.bard.webservice.util.Pagination
 
 import spock.lang.Specification
 import spock.lang.Unroll

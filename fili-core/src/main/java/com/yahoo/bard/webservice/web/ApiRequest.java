@@ -12,7 +12,6 @@ import com.yahoo.bard.webservice.data.time.GranularityParser;
 import com.yahoo.bard.webservice.druid.model.query.Granularity;
 import com.yahoo.bard.webservice.util.AllPagesPagination;
 import com.yahoo.bard.webservice.util.GranularityParseException;
-import com.yahoo.bard.webservice.util.Pagination;
 import com.yahoo.bard.webservice.web.util.PaginationLink;
 import com.yahoo.bard.webservice.web.util.PaginationParameters;
 

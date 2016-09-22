@@ -6,7 +6,6 @@ import com.yahoo.bard.webservice.data.Result;
 import com.yahoo.bard.webservice.data.ResultSet;
 import com.yahoo.bard.webservice.table.Schema;
 import com.yahoo.bard.webservice.util.AllPagesPagination;
-import com.yahoo.bard.webservice.util.Pagination;
 import com.yahoo.bard.webservice.web.AbstractResponse;
 import com.yahoo.bard.webservice.web.responseprocessors.MappingResponseProcessor;
 import com.yahoo.bard.webservice.web.util.PaginationParameters;

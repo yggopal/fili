@@ -28,7 +28,7 @@ import com.yahoo.bard.webservice.util.DateTimeFormatterFactory
 import com.yahoo.bard.webservice.util.GroovyTestUtils
 import com.yahoo.bard.webservice.util.JsonSlurper
 import com.yahoo.bard.webservice.util.JsonSortStrategy
-import com.yahoo.bard.webservice.util.Pagination
+
 import com.yahoo.bard.webservice.util.SimplifiedIntervalList
 
 import com.fasterxml.jackson.dataformat.csv.CsvSchema

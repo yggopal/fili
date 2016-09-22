@@ -3,7 +3,6 @@
 package com.yahoo.bard.webservice.web;
 
 import com.yahoo.bard.webservice.application.ObjectMappersSuite;
-import com.yahoo.bard.webservice.util.Pagination;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
