@@ -4,10 +4,10 @@ package com.yahoo.bard.webservice.util;
 
 import com.yahoo.bard.webservice.web.PageNotFoundException;
 import com.yahoo.bard.webservice.web.util.PaginationParameters;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import rx.Observable;
 
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
@@ -19,30 +19,27 @@ import java.util.stream.Collectors;
  *
  * @param <T> collection type
  */
-public class AllPagesPagination<T> implements Pagination<T> {
-    // Collection to be paginated
-    private final int collectionSize;
-    private final List<T> pageOfData;
+public class Pagination<T> {
 
-    private final int pageToFetch;
-    private final int countPerPage;
-    private final int lastPage;
+    private static final int FIRST_PAGE = 1;
+
+    // Collection to be paginated
+    private final Observable<T> page;
+    private final PaginationParameters paginationParameters;
+    private final Observable<Integer> numResults;
 
     /**
      * Constructor.
      *
-     * @param entireCollection  Collection of entries to be paginated. We guarantee consistent pagination (requesting
-     * page 2 of the same collection always returns the same sublist) if and only if the Collection guarantees a
-     * consistent iteration order.
-     * @param paginationParameters  The parameters needed for pagination.
+     * @param pageOfData  The page of data requested.
      *
      * @throws PageNotFoundException if pageToFetch is greater than the number of pages.
      */
-    public AllPagesPagination(Collection<T> entireCollection, PaginationParameters paginationParameters)
+    public Pagination(Observable<T> page, PaginationParameters paginationParameters, Observable<Integer> numResults)
             throws PageNotFoundException {
-        this.collectionSize = entireCollection.size();
-        this.pageToFetch = paginationParameters.getPage();
-        this.countPerPage = paginationParameters.getPerPage();
+        this.paginationParameters = paginationParameters;
+        this.numResults = numResults;
+        this.page = page;
         this.lastPage = (collectionSize > countPerPage) ? (collectionSize - 1) / countPerPage + 1 : 1;
 
         if (this.pageToFetch > this.lastPage || this.pageToFetch < FIRST_PAGE) {
@@ -58,43 +55,40 @@ public class AllPagesPagination<T> implements Pagination<T> {
         );
     }
 
-    @Override
-    public int getPage() {
-        return pageToFetch;
+    public int getRequestedPageNumber() {
+        return paginationParameters.getPage();
     }
 
-    @Override
     public int getPerPage() {
-        return countPerPage;
+        return paginationParameters.getPerPage();
     }
 
-    @Override
-    public OptionalInt getFirstPage() {
-        return FIRST_PAGE != pageToFetch ? OptionalInt.of(FIRST_PAGE) : OptionalInt.empty();
+    public Observable<Integer> getFirstPage() {
+        return Observable.just(getRequestedPageNumber()).filter(pageNumber -> pageNumber != FIRST_PAGE);
     }
 
-    @Override
-    public OptionalInt getLastPage() {
-        return lastPage != pageToFetch ? OptionalInt.of(lastPage) : OptionalInt.empty();
+    public Observable<Integer> getLastPage() {
+        int perPage = getPerPage();
+        return numResults
+                .map(numRows -> numRows > perPage ? (numRows - 1) / perPage + 1 : 1)
+                .filter(lastPage -> lastPage != getRequestedPageNumber());
     }
 
-    @Override
-    public OptionalInt getNextPage() {
-        return pageToFetch < lastPage ? OptionalInt.of(pageToFetch + 1) : OptionalInt.empty();
+    public Observable<Integer> getNextPage() {
+        return getLastPage().filter(lastPage -> getRequestedPageNumber() < lastPage);
     }
 
-    @Override
-    public OptionalInt getPreviousPage() {
-        return pageToFetch > FIRST_PAGE ? OptionalInt.of(pageToFetch - 1) : OptionalInt.empty();
+    public Observable<Integer> getPreviousPage() {
+        return Observable.just(getRequestedPageNumber())
+                .filter(pageNumber -> pageNumber > FIRST_PAGE)
+                .map(pageNumber -> pageNumber - 1);
     }
 
-    @Override
-    public List<T> getPageOfData() {
-        return pageOfData;
+    public Observable<T> getPageOfData() {
+        return page;
     }
 
-    @Override
-    public int getNumResults() {
-        return collectionSize;
+    public Observable<Integer> getNumResults() {
+        return numResults;
     }
 }

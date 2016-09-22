@@ -3,7 +3,6 @@
 package com.yahoo.bard.webservice.data.dimension;
 
 import com.yahoo.bard.webservice.data.cache.HashDataCache.Pair;
-import com.yahoo.bard.webservice.util.Pagination;
 import com.yahoo.bard.webservice.web.ApiFilter;
 import com.yahoo.bard.webservice.web.util.PaginationParameters;
 
