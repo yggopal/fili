@@ -4,6 +4,7 @@ package com.yahoo.bard.webservice.web.handlers;
 
 import com.yahoo.bard.webservice.data.metric.mappers.PaginationMapper;
 import com.yahoo.bard.webservice.druid.model.query.DruidAggregationQuery;
+import com.yahoo.bard.webservice.util.pagination.FiliPaginator;
 import com.yahoo.bard.webservice.web.DataApiRequest;
 import com.yahoo.bard.webservice.web.responseprocessors.MappingResponseProcessor;
 import com.yahoo.bard.webservice.web.responseprocessors.ResponseProcessor;
@@ -46,8 +47,8 @@ public class PaginationRequestHandler implements DataRequestHandler {
                     new PaginationMapper(
                             paginationParameters,
                             mappingResponse,
-                            request.getUriInfo().getRequestUriBuilder()
-                    )
+                            request.getUriInfo().getRequestUriBuilder(),
+                            new FiliPaginator<>())
             );
         }
         return next.handleRequest(context, request, druidQuery, mappingResponse);

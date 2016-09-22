@@ -5,12 +5,16 @@ package com.yahoo.bard.webservice.data.metric.mappers;
 import com.yahoo.bard.webservice.data.Result;
 import com.yahoo.bard.webservice.data.ResultSet;
 import com.yahoo.bard.webservice.table.Schema;
-import com.yahoo.bard.webservice.util.AllPagesPagination;
+import com.yahoo.bard.webservice.util.pagination.Pagination;
 import com.yahoo.bard.webservice.web.AbstractResponse;
 import com.yahoo.bard.webservice.web.responseprocessors.MappingResponseProcessor;
 import com.yahoo.bard.webservice.web.util.PaginationParameters;
+import rx.Observable;
 
 import javax.ws.rs.core.UriBuilder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiFunction;
 
 /**
  * Extracts the requested page of data from the Druid results. Behavior is undefined if the page requested is
@@ -21,22 +25,25 @@ public class PaginationMapper extends ResultSetMapper {
     private final PaginationParameters paginationParameters;
     private final MappingResponseProcessor responseProcessor;
     private final UriBuilder uriBuilder;
+    private final BiFunction<Observable<Result>, PaginationParameters, Pagination<Result>> paginator;
 
     /**
      * Constructor.
-     *
-     * @param paginationParameters  The parameters needed for pagination
+     *  @param paginationParameters  The parameters needed for pagination
      * @param responseProcessor  The API response to which we can add the header links.
      * @param uriBuilder  The builder for creating the pagination links.
+     * @param paginator  The function that should paginate the results
      */
     public PaginationMapper(
             PaginationParameters paginationParameters,
             MappingResponseProcessor responseProcessor,
-            UriBuilder uriBuilder
+            UriBuilder uriBuilder,
+            BiFunction<Observable<Result>, PaginationParameters, Pagination<Result>> paginator
     ) {
         this.paginationParameters = paginationParameters;
         this.responseProcessor = responseProcessor;
         this.uriBuilder = uriBuilder;
+        this.paginator = paginator;
     }
 
     /**
@@ -50,10 +57,15 @@ public class PaginationMapper extends ResultSetMapper {
      */
     @Override
     public ResultSet map(ResultSet resultSet) {
-        Pagination<Result> pages = new AllPagesPagination<>(resultSet, paginationParameters);
+        Pagination<Result> pages = paginator.apply(Observable.from(resultSet), paginationParameters);
         AbstractResponse.addLinks(pages, uriBuilder, responseProcessor);
-        //uses map for additional flexibility and robustness, even though it is currently a no-op.
-        return new ResultSet(pages.getPageOfData(), map(resultSet.getSchema()));
+        return new ResultSet(
+                pages.getPageOfData()
+                        .collect(() -> new ArrayList<Result>(pages.getPerPage()), List::add)
+                        .toBlocking() //This is ugly but necessary until we make the mapping chain reactive
+                        .single(),
+                map(resultSet.getSchema())
+        );
     }
 
     @Override
