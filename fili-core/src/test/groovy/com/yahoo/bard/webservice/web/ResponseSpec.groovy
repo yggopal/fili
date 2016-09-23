@@ -4,6 +4,7 @@ package com.yahoo.bard.webservice.web
 
 import com.yahoo.bard.webservice.data.time.DefaultTimeGrain
 import com.yahoo.bard.webservice.table.PhysicalTable
+import com.yahoo.bard.webservice.util.pagination.Pagination
 
 import static com.yahoo.bard.webservice.config.BardFeatureFlag.PARTIAL_DATA
 import static com.yahoo.bard.webservice.util.SimplifiedIntervalList.NO_INTERVALS
@@ -286,7 +287,7 @@ class ResponseSpec extends Specification {
             getLastPage() >> 3
             getNextPage() >> 3
             getPreviousPage() >> 1
-            getPage() >> PAGE
+            getRequestedPageNumber() >> PAGE
             getNumResults() >> 6
             getPerPage() >> PER_PAGE
         }

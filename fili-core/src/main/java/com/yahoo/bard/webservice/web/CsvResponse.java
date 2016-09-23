@@ -7,6 +7,7 @@ import com.yahoo.bard.webservice.application.ObjectMappersSuite;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
+import com.yahoo.bard.webservice.util.pagination.Pagination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

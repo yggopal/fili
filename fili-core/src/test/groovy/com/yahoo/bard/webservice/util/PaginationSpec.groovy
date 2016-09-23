@@ -2,10 +2,11 @@
 // Licensed under the terms of the Apache license. Please see LICENSE file distributed with this work for terms.
 package com.yahoo.bard.webservice.util
 
+import com.yahoo.bard.webservice.util.pagination.FiliPaginator
 import com.yahoo.bard.webservice.util.pagination.Pagination
 import com.yahoo.bard.webservice.web.PageNotFoundException
 import com.yahoo.bard.webservice.web.util.PaginationParameters
-
+import rx.Observable
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -30,17 +31,18 @@ class PaginationSpec extends Specification {
 
     def setupSpec(){
         //first page
-        pagination1 = new AllPagesPagination(CONTENT, new PaginationParameters(ROWS_PER_PAGE, 1))
+        pagination1 = new FiliPaginator<>().apply(Observable.from(CONTENT), new PaginationParameters(ROWS_PER_PAGE, 1))
         // second page
-        pagination2 = new AllPagesPagination(CONTENT, new PaginationParameters(ROWS_PER_PAGE, 2))
+        pagination2 = new FiliPaginator<>().apply(Observable.from(CONTENT), new PaginationParameters(ROWS_PER_PAGE, 2))
         // last page
-        pagination3 = new AllPagesPagination(CONTENT, new PaginationParameters(ROWS_PER_PAGE, NUM_PAGES))
+        pagination3 = new FiliPaginator<>()
+                .apply(Observable.from(CONTENT), new PaginationParameters(ROWS_PER_PAGE, NUM_PAGES))
     }
 
     def "test getPaginatedResult()"() {
         expect:
-        [6, 7, 8, 9, 10] == pagination2.getPageOfData()
-        [26, 27] == pagination3.getPageOfData()
+        [6, 7, 8, 9, 10] == pagination2.getPageOfData().toList().toBlocking().single()
+        [26, 27] == pagination3.getPageOfData().toList().toBlocking().single()
     }
 
     def "test getLastPage()"() {
@@ -55,23 +57,24 @@ class PaginationSpec extends Specification {
 
     def "test invalid getNextPage()"() {
         expect:
-        pagination3.getNextPage() == OptionalInt.empty()
+        pagination3.getNextPage().isEmpty().toBlocking().single()
     }
 
     def "test valid getPreviousPage()"() {
         expect:
-        pagination2.getPreviousPage().getAsInt() == 1
+        pagination2.getPreviousPage().toBlocking().single() == 1
     }
 
     def "test invalid getPreviousPage()"() {
         expect:
-        pagination1.getPreviousPage() == OptionalInt.empty()
+        pagination1.getPreviousPage().isEmpty().toBlocking().single()
     }
 
     @Unroll
     def "An exception is thrown when page requested is #pagePastTheLast and number of pages is #numPages"(){
         when: "We build a pagination object that tries to fetch a page past the last"
-        new AllPagesPagination<Integer>(CONTENT, new PaginationParameters(ROWS_PER_PAGE, pagePastTheLast))
+        new FiliPaginator<Integer>()
+                .apply(Observable.from(CONTENT), new PaginationParameters(ROWS_PER_PAGE, pagePastTheLast))
 
         then: "We get a PageNotFoundException with the expected error message."
         PageNotFoundException exception = thrown(PageNotFoundException)
@@ -85,8 +88,8 @@ class PaginationSpec extends Specification {
 
     def "When the result set is empty, and we request the first page, we get an empty result set"() {
         given: "A pagination object with an empty result set and a desired first page."
-        Pagination<Integer> pagination = new AllPagesPagination<>(
-                Collections.emptySet(),
+        Pagination<Integer> pagination = new FiliPaginator<>().apply(
+                Observable.empty(),
                 new PaginationParameters(ROWS_PER_PAGE, 1)
         )
 
@@ -96,7 +99,7 @@ class PaginationSpec extends Specification {
 
     def "When the result set is empty, and we request a page other than the first, we get a PageNotFoundError" () {
         when: "We built a pagination object with an empty result set and a desired page other than the first"
-        new AllPagesPagination<Integer>(Collections.emptySet(), new PaginationParameters(ROWS_PER_PAGE, 2))
+        new FiliPaginator<Integer>().apply(Observable.empty(), new PaginationParameters(ROWS_PER_PAGE, 2))
 
         then: "We throw an error"
         thrown(PageNotFoundException)
@@ -109,13 +112,13 @@ class PaginationSpec extends Specification {
         List<Integer> results = (1..numResults)
 
         when: "We built the pagination object"
-        Pagination<Integer> pagination = new AllPagesPagination<>(
-                results,
+        Pagination<Integer> pagination = new FiliPaginator<>().apply(
+                Observable.from(results),
                 new PaginationParameters(rowsPerPage, numResults / rowsPerPage + 1 as Integer)
         )
 
         then: "The page requested is the last page."
-        pagination.getNextPage() == OptionalInt.empty()
+        pagination.getNextPage().isEmpty().toBlocking().single()
 
         and: "The page has the rows"
         pagination.getPageOfData() == (rowsPerPage + 1 .. numResults).collect()
@@ -133,11 +136,12 @@ class PaginationSpec extends Specification {
         List<Integer> results = (1..rows).collect()
 
         when: "We build the pagination object"
-        Pagination<Integer> pagination = new AllPagesPagination<>(results, new PaginationParameters(rowsPerPage, 1))
+        Pagination<Integer> pagination = new FiliPaginator<>()
+                .apply(Observable.from(results), new PaginationParameters(rowsPerPage, 1))
 
         then: "There is only one page"
-        pagination.getNextPage() == OptionalInt.empty()
-        pagination.getPreviousPage() == OptionalInt.empty()
+        pagination.getNextPage().isEmpty().toBlocking().single()
+        pagination.getPreviousPage().isEmpty().toBlocking().single()
 
         and: "The page has all the results"
         pagination.getPageOfData() == results

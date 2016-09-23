@@ -19,6 +19,7 @@ import com.codahale.metrics.annotation.Timed;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -123,8 +125,13 @@ public class MetricsServlet extends EndpointServlet {
                 apiRequest = (MetricsApiRequest) requestMapper.apply(apiRequest, containerRequestContext);
             }
 
-            Stream<Map<String, String>> result = apiRequest.getPage(
-                    getLogicalMetricListSummaryView(apiRequest.getMetrics(), uriInfo)
+            Stream<Map<String, String>> result = StreamSupport.stream(
+                    apiRequest
+                            .getPage(Observable.from(getLogicalMetricListSummaryView(apiRequest.getMetrics(), uriInfo)))
+                            .toBlocking()
+                            .toIterable()
+                            .spliterator(),
+                    false
             );
 
             Response response = formatResponse(

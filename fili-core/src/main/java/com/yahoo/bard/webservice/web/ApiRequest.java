@@ -310,8 +310,10 @@ public abstract class ApiRequest {
     }
 
     /**
-     * Paginates the results, adds the pagination links to the response builder, and retuns an observable of the
+     * Paginates the results, adds the pagination links to the response builder, and returns an observable of the
      * requested page of results.
+     * <p>
+     * If the user has not requested pagination, this method is the identity function.
      *
      * @param results  The query results
      * @param <T>  The type of the collection elements
@@ -326,7 +328,7 @@ public abstract class ApiRequest {
             addPageLinks(pagination.get());
             return pagination.get().getPageOfData();
         } else {
-            return Observable.empty();
+            return results;
         }
     }
 

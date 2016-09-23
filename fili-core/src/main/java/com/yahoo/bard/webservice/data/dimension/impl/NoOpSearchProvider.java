@@ -8,15 +8,16 @@ import com.yahoo.bard.webservice.data.dimension.DimensionField;
 import com.yahoo.bard.webservice.data.dimension.DimensionRow;
 import com.yahoo.bard.webservice.data.dimension.KeyValueStore;
 import com.yahoo.bard.webservice.data.dimension.SearchProvider;
-import com.yahoo.bard.webservice.util.AllPagesPagination;
+import com.yahoo.bard.webservice.util.pagination.FiliPaginator;
+import com.yahoo.bard.webservice.util.pagination.Pagination;
 import com.yahoo.bard.webservice.web.ApiFilter;
 import com.yahoo.bard.webservice.web.util.PaginationParameters;
+import rx.Observable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 /**
  * NoSearchProvider class
@@ -117,7 +118,10 @@ public class NoOpSearchProvider implements SearchProvider {
 
     @Override
     public Pagination<DimensionRow> findAllDimensionRowsPaged(PaginationParameters paginationParameters) {
-        return new AllPagesPagination<>(dimensionRows, paginationParameters);
+        return new FiliPaginator<DimensionRow>().apply(
+                Observable.from(dimensionRows),
+                paginationParameters
+        );
     }
 
     @Override
@@ -125,11 +129,11 @@ public class NoOpSearchProvider implements SearchProvider {
             Set<ApiFilter> filters,
             PaginationParameters paginationParameters
     ) {
-        return new AllPagesPagination<>(
-                filters.stream()
-                        .flatMap(f -> f.getValues().stream())
-                        .map(this::makeDimensionRow)
-                        .collect(Collectors.toCollection(TreeSet::new)),
+        return new FiliPaginator<DimensionRow>().apply(
+                Observable.from(filters)
+                        .map(ApiFilter::getValues)
+                        .flatMap(Observable::from)
+                        .map(this::makeDimensionRow),
                 paginationParameters
         );
     }

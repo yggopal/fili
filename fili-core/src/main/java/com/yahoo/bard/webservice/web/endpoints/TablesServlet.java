@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -35,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -168,8 +170,12 @@ public class TablesServlet extends EndpointServlet implements BardConfigResource
                 apiRequest = (TablesApiRequest) requestMapper.apply(apiRequest, containerRequestContext);
             }
 
-            Stream<Map<String, String>> result = apiRequest.getPage(
-                    getLogicalTableListSummaryView(apiRequest.getTables(), uriInfo)
+            Stream<Map<String, String>> result = StreamSupport.stream(
+                    apiRequest.getPage(Observable.from(getLogicalTableListSummaryView(apiRequest.getTables(), uriInfo)))
+                            .toBlocking()
+                            .toIterable()
+                            .spliterator(),
+                   false
             );
 
             Response response = formatResponse(
@@ -291,8 +297,14 @@ public class TablesServlet extends EndpointServlet implements BardConfigResource
 
             TableFullViewProcessor fullViewProcessor = new TableFullViewProcessor();
 
-            Stream<TableView> paginatedResult = tablesApiRequest.getPage(
-                    fullViewProcessor.formatTables(tablesApiRequest.getTables(), uriInfo)
+            Stream<TableView> paginatedResult = StreamSupport.stream(
+                    tablesApiRequest.getPage(
+                            Observable.from(fullViewProcessor.formatTables(tablesApiRequest.getTables(), uriInfo))
+                    )
+                            .toBlocking()
+                            .toIterable()
+                            .spliterator(),
+                    false
             );
             Response response = formatResponse(tablesApiRequest, paginatedResult, "tables", null);
 

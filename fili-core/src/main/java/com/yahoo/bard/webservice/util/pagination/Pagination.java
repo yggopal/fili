@@ -29,11 +29,16 @@ public class Pagination<T> implements Serializable {
      * Constructor.
      *
      * @param page  The page of data requested.
+     * @param paginationParameters  The page and rows per page requested by the user
+     * @param numResults  The total number of results in the response
      *
      * @throws PageNotFoundException if pageToFetch is greater than the number of pages.
      */
-    public Pagination(Observable<T> page, PaginationParameters paginationParameters, Observable<Integer> numResults)
-            throws PageNotFoundException {
+    public Pagination(
+            Observable<T> page,
+            PaginationParameters paginationParameters,
+            Observable<Integer> numResults
+    ) throws PageNotFoundException {
         this.paginationParameters = paginationParameters;
         this.numResults = numResults;
         this.page = page;
@@ -86,8 +91,7 @@ public class Pagination<T> implements Serializable {
      * the last page
      */
     public Observable<Integer> getNextPage() {
-        int requestedPageNumber = getRequestedPageNumber();
-        return getLastPage().map(ignored -> requestedPageNumber + 1);
+        return getLastPage().map(ignored -> getRequestedPageNumber() + 1);
 
     }
 

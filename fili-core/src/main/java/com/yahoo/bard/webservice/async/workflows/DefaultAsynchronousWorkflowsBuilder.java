@@ -178,7 +178,6 @@ public class DefaultAsynchronousWorkflowsBuilder implements AsynchronousWorkflow
                 .flatMap(preResponse -> preResponseStore.save(jobRow.getId(), preResponse));
     }
 
-
     /**
      * Builds the notification channel that updates the JobRow with the success or error status upon completion.
      * <p>

@@ -17,11 +17,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -133,7 +135,10 @@ public class FeatureFlagsServlet extends EndpointServlet {
                     .map(flag -> new FeatureFlagEntry(flag.getName(), flag.isOn()))
                     .collect(Collectors.toList());
 
-            Stream<FeatureFlagEntry> result = apiRequest.getPage(status);
+            Stream<FeatureFlagEntry> result = StreamSupport.stream(
+                    apiRequest.getPage(Observable.from(status)).toBlocking().toIterable().spliterator(),
+                    false
+            );
 
             Response response = formatResponse(
                     apiRequest,

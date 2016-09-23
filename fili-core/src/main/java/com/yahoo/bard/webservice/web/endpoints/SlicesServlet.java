@@ -10,6 +10,7 @@ import com.yahoo.bard.webservice.application.ObjectMappersSuite;
 import com.yahoo.bard.webservice.logging.RequestLog;
 import com.yahoo.bard.webservice.logging.blocks.SliceRequest;
 import com.yahoo.bard.webservice.table.PhysicalTableDictionary;
+import com.yahoo.bard.webservice.util.StreamUtils;
 import com.yahoo.bard.webservice.web.RequestMapper;
 import com.yahoo.bard.webservice.web.RequestValidationException;
 import com.yahoo.bard.webservice.web.SlicesApiRequest;
@@ -18,10 +19,12 @@ import com.codahale.metrics.annotation.Timed;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -116,11 +119,11 @@ public class SlicesServlet extends EndpointServlet {
                 apiRequest = (SlicesApiRequest) requestMapper.apply(apiRequest, containerRequestContext);
             }
 
-            Stream<Map<String, String>> result = apiRequest.getPage(apiRequest.getSlices());
+            Observable<Map<String, String>> result = apiRequest.getPage(Observable.from(apiRequest.getSlices()));
 
             Response response = formatResponse(
                     apiRequest,
-                    result,
+                    StreamSupport.stream(result.toBlocking().toIterable().spliterator(), false),
                     UPDATED_METADATA_COLLECTION_NAMES.isOn() ? "slices" : "rows",
                     null
             );

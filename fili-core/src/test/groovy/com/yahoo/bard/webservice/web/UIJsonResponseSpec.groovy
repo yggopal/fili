@@ -3,6 +3,7 @@
 package com.yahoo.bard.webservice.web
 
 import com.yahoo.bard.webservice.table.PhysicalTable
+import com.yahoo.bard.webservice.util.pagination.Pagination
 
 import static com.yahoo.bard.webservice.data.time.DefaultTimeGrain.DAY
 import static com.yahoo.bard.webservice.util.SimplifiedIntervalList.NO_INTERVALS

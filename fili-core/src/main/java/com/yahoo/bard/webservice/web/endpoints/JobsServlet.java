@@ -20,9 +20,8 @@ import com.yahoo.bard.webservice.data.ResultSet;
 import com.yahoo.bard.webservice.data.dimension.DimensionDictionary;
 import com.yahoo.bard.webservice.logging.RequestLog;
 import com.yahoo.bard.webservice.logging.blocks.JobRequest;
-import com.yahoo.bard.webservice.util.AllPagesPagination;
-import com.yahoo.bard.webservice.util.StreamUtils;
-import com.yahoo.bard.webservice.util.Utils;
+import com.yahoo.bard.webservice.util.pagination.FiliPaginator;
+import com.yahoo.bard.webservice.util.pagination.Pagination;
 import com.yahoo.bard.webservice.web.ApiRequest;
 import com.yahoo.bard.webservice.web.JobNotFoundException;
 import com.yahoo.bard.webservice.web.JobsApiRequest;
@@ -40,8 +39,6 @@ import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,13 +48,8 @@ import rx.observables.ConnectableObservable;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -73,6 +65,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -170,18 +163,15 @@ public class JobsServlet extends EndpointServlet {
             // jobsApiRequest.
             JobsApiRequest jobsApiRequest = apiRequest;
 
-            Function<Collection<Map<String, String>>, AllPagesPagination<Map<String, String>>> paginationFactory =
-                    jobsApiRequest.getAllPagesPaginationFactory(
-                            jobsApiRequest.getPaginationParameters()
-                                    .orElse(
-                                            jobsApiRequest.getDefaultPagination()
-                                    )
+            Optional<Pagination<Map<String, String>>> paginatedJobViews = apiRequest.getPaginationParameters()
+                    .map(paginationParameters -> new FiliPaginator<Map<String, String>>()
+                            .apply(jobsApiRequest.getJobViews(), paginationParameters)
                     );
-
-            apiRequest.getJobViews().toList()
-                    .map(jobs -> jobsApiRequest.getPage(paginationFactory.apply(jobs)))
-                    .map(result -> formatResponse(jobsApiRequest, result, "jobs", null))
-                    .defaultIfEmpty(getResponse("{}"))
+            paginatedJobViews.ifPresent(jobsApiRequest::addPageLinks);
+            paginatedJobViews.map(Pagination::getPageOfData).orElse(jobsApiRequest.getJobViews())
+                    .toList()
+                    .map(List::stream)
+                    .map(resultStream -> formatResponse(jobsApiRequest, resultStream, "jobs", null))
                     .onErrorReturn(this::getErrorResponse)
                     .subscribe(
                             response -> {
@@ -497,9 +487,14 @@ public class JobsServlet extends EndpointServlet {
         }
 
         return paginationParameters
-                .map(pageParams -> new AllPagesPagination<>(preResponse.getResultSet(), pageParams))
+                .map(pageParams -> new FiliPaginator<Result>()
+                        .apply(Observable.from(preResponse.getResultSet()), pageParams)
+                )
                 .map(page -> new PreResponse(
-                        new ResultSet(page.getPageOfData(), preResponse.getResultSet().getSchema()),
+                        new ResultSet(
+                                page.getPageOfData().toList().toBlocking().single(),
+                                preResponse.getResultSet().getSchema()
+                        ),
                         addPaginationInfoToResponseContext(responseContext, uriInfo, page)
                 ))
                 .map(Observable::just)
@@ -520,16 +515,14 @@ public class JobsServlet extends EndpointServlet {
             UriInfo uriInfo,
             Pagination<Result> pages
     ) {
-        LinkedHashMap<String, URI> bodyLinks = Arrays.stream(PaginationLink.values())
-                .map(link -> new ImmutablePair<>(link.getBodyName(), link.getPage(pages)))
-                .filter(pair -> pair.getRight().isPresent())
-                .map(pair -> Utils.withRight(pair, pair.getRight().getAsInt()))
-                .map(pair -> Utils.withRight(
-                        pair,
-                        uriInfo.getRequestUriBuilder().replaceQueryParam("page", pair.getRight()))
-                )
-                .map(pair -> Utils.withRight(pair, pair.getRight().build()))
-                .collect(StreamUtils.toLinkedMap(Pair::getLeft, Pair::getRight));
+        LinkedHashMap<String, URI> bodyLinks = new LinkedHashMap<>();
+        Arrays.stream(PaginationLink.values()).forEach(link ->
+               link.getPage(pages)
+                    .map(page -> uriInfo.getRequestUriBuilder().replaceQueryParam("page", page))
+                    .map(UriBuilder::build)
+                    .subscribe(uri -> bodyLinks.put(link.getBodyName(), uri))
+        );
+
         responseContext.put(ResponseContextKeys.PAGINATION_LINKS_CONTEXT_KEY.getName(), bodyLinks);
         responseContext.put(ResponseContextKeys.PAGINATION_CONTEXT_KEY.getName(), pages);
         return responseContext;

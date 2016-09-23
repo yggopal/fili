@@ -6,7 +6,8 @@ import com.yahoo.bard.webservice.application.ObjectMappersSuite
 import com.yahoo.bard.webservice.util.GroovyTestUtils
 import com.yahoo.bard.webservice.util.JsonSlurper
 import com.yahoo.bard.webservice.util.JsonSortStrategy
-
+import com.yahoo.bard.webservice.util.pagination.Pagination
+import rx.Observable
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -57,12 +58,12 @@ class JsonResponseSpec extends Specification {
 
     Pagination stubPagination() {
         Stub(Pagination) {
-            getFirstPage() >> OptionalInt.of(1)
-            getLastPage() >> OptionalInt.of(3)
-            getNextPage() >> OptionalInt.of(3)
-            getPreviousPage() >> OptionalInt.of(1)
-            getPage() >> PAGE
-            getNumResults() >> 6
+            getFirstPage() >> Observable.just(1)
+            getLastPage() >> Observable.just(3)
+            getNextPage() >> Observable.just(3)
+            getPreviousPage() >> Observable.just(1)
+            getRequestedPageNumber() >> PAGE
+            getNumResults() >> Observable.just(6)
             getPerPage() >> PER_PAGE
         }
     }
