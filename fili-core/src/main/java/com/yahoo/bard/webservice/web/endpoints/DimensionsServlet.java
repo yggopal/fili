@@ -17,6 +17,7 @@ import com.yahoo.bard.webservice.logging.blocks.DimensionRequest;
 import com.yahoo.bard.webservice.table.LogicalTableDictionary;
 import com.yahoo.bard.webservice.util.StreamUtils;
 import com.yahoo.bard.webservice.util.pagination.FiliPaginator;
+import com.yahoo.bard.webservice.util.pagination.Pagination;
 import com.yahoo.bard.webservice.web.*;
 import com.yahoo.bard.webservice.web.util.PaginationParameters;
 
@@ -297,7 +298,9 @@ public class DimensionsServlet extends EndpointServlet {
                             paginationParameters
                     );
 
-            Stream<Map<String, String>> rows = apiRequest.getPage(pagedRows)
+            apiRequest.addPageLinks(pagedRows);
+
+            Observable<Map<String, String>> rows = pagedRows.getPageOfData()
                     .map(DimensionRow::entrySet)
                     .map(Set::stream)
                     .map(stream ->
@@ -311,7 +314,7 @@ public class DimensionsServlet extends EndpointServlet {
 
             Response response = formatResponse(
                     apiRequest,
-                    rows,
+                    StreamSupport.stream(rows.toBlocking().toIterable().spliterator(), false),
                     UPDATED_METADATA_COLLECTION_NAMES.isOn() ? "dimensions" : "rows",
                     null
             );

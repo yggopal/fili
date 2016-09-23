@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
+import com.yahoo.bard.webservice.util.pagination.Pagination;
 import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -546,7 +547,7 @@ public class Response {
             JsonGenerator generator,
             Collection<Interval> missingIntervals,
             SimplifiedIntervalList volatileIntervals,
-            Pagination pagination
+            Pagination<?> pagination
     ) throws IOException {
         boolean paginating = pagination != null;
         boolean haveMissingIntervals = BardFeatureFlag.PARTIAL_DATA.isOn() && !missingIntervals.isEmpty();
@@ -576,9 +577,12 @@ public class Response {
                 generator.writeObjectField(entry.getKey(), entry.getValue());
             }
 
-            generator.writeNumberField("currentPage", pagination.getPage());
+            generator.writeNumberField("currentPage", pagination.getRequestedPageNumber());
             generator.writeNumberField("rowsPerPage", pagination.getPerPage());
-            generator.writeNumberField("numberOfResults", pagination.getNumResults());
+            // We could subscribe to pagination.getNumResults(), but because generator.writeNumberField throws
+            // an IOException we would have to do some crazy exception catching wrapping and rewthrowing in order
+            // to percolate it.
+            generator.writeNumberField("numberOfResults", pagination.getNumResults().toBlocking().single());
 
             generator.writeEndObject();
         }

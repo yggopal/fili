@@ -7,6 +7,7 @@ import com.yahoo.bard.webservice.application.ObjectMappersSuite;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
+import com.yahoo.bard.webservice.util.pagination.Pagination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
