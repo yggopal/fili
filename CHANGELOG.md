@@ -10,6 +10,8 @@ Current
 
 ### Added:
 
+- [Stream utils for dealing with `Map`s](https://github.com/yahoo/fili/pull/114)
+
 - [Ability to not try to cache Druid responses that are larger than the maximum size supported by the cache implementation](https://github.com/yahoo/fili/pull/93)
     * Supported for both Cache v1 and V2
     * Controlled with `bard__druid_max_response_length_to_cache` setting
