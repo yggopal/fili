@@ -15,7 +15,12 @@ Current
     * Controlled with `bard__druid_max_response_length_to_cache` setting
     * Default value is `MAX_LONG`, so no cache prevention will happen by default
 
+- [Maven-based integration with VersionEye dependency checking service](https://github.com/yahoo/fili/pull/-1)
+
+
 ### Changed:
+
+- [Build and Release cleanups](https://github.com/yahoo/fili/pull/-1)
 
 - [Remove restriction for single physical dimension to multiple lookup dimensions](https://github.com/yahoo/fili/pull/112)
     * Modified physical dimension name to logical dimension name mapping into a `Map<String, Set<String>>` instead of `Map<String, String>` in `PhysicalTable.java`
