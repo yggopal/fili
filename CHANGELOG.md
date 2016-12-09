@@ -31,6 +31,9 @@ Current
 - [Add ability for `ClassScanner` to instantiate arrays](https://github.com/yahoo/fili/pull/107)
     * This allows for more robust testing of classes that make use of arrays in their constructor parameters
 
+- [Add module load test code](https://github.com/yahoo/fili/pull/122)
+    * Code to automatically test module is correctly configured.
+
 ### Changed:
 
 - [Fili's name for a PhysicalTable is decoupled from the name of the associated table in Druid](https://github.com/yahoo/fili/pull/123)
