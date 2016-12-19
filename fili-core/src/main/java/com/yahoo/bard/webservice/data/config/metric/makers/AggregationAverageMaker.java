@@ -39,9 +39,14 @@ import javax.validation.constraints.NotNull;
  * time grain (i.e. DefaultTimeGrain.WEEK). For example, given the total number of visitors to www.example.com for each
  * day of the week, we can compute the average number of daily visitors to example.com for the entire week.
  * <p>
- * A nested average requires the following columns, an inner query constant, and outer query sum of that constant,
- * an inner query aggregation or post aggregation field to sum, and outer query sum of the inner field, and
- * finally a post aggregation in the outer query taking the division of the sum and the constant sum.
+ * A nested average requires the following columns:
+ * <ul>
+ *    <li>an inner query constant one</li>
+ *    <li>an inner query numeric aggregation or post aggregation field to sum</li>
+ *    <li>and outer query sum of the constant to provide a row count</li>
+ *    <li>an outer query sum of the inner numeric summand</li>
+ *    <li>finally, a post aggregation in the outer query dividing the sum by the count</li>
+ * </ul>
  */
 public class AggregationAverageMaker extends MetricMaker {
 
@@ -122,8 +127,9 @@ public class AggregationAverageMaker extends MetricMaker {
     private TemplateDruidQuery buildInnerQuery(MetricField sourceMetric, TemplateDruidQuery innerDependentQuery) {
         Set<Aggregation> newInnerAggregations = convertSketchesToSketchMerges(innerDependentQuery.getAggregations());
 
-        Set<PostAggregation> newInnerPostAggregations = !(sourceMetric instanceof PostAggregation) ?
-                Collections.emptySet() : ImmutableSet.of((PostAggregation) sourceMetric);
+        Set<PostAggregation> newInnerPostAggregations = (sourceMetric instanceof PostAggregation) ?
+                ImmutableSet.of((PostAggregation) sourceMetric) :
+                Collections.emptySet();
 
         // Build the inner query with the new aggregations and with the count
         return innerDependentQuery.withAggregations(newInnerAggregations)
@@ -140,9 +146,9 @@ public class AggregationAverageMaker extends MetricMaker {
      * @return Either the original MetricField, or a new SketchEstimate post aggregation
      */
     private MetricField convertToSketchEstimateIfNeeded(MetricField originalSourceMetric) {
-        return !(originalSourceMetric instanceof SketchAggregation) ?
-                originalSourceMetric :
-                sketchConverter.asSketchEstimate((SketchAggregation) originalSourceMetric);
+        return originalSourceMetric instanceof SketchAggregation ?
+                sketchConverter.asSketchEstimate((SketchAggregation) originalSourceMetric) :
+                originalSourceMetric;
     }
 
     /**
@@ -156,7 +162,7 @@ public class AggregationAverageMaker extends MetricMaker {
      */
     private Set<Aggregation> convertSketchesToSketchMerges(Set<Aggregation> originalAggregations) {
         return originalAggregations.stream()
-                .map(agg -> ! agg.isSketch() ? agg : sketchConverter.asInnerSketch((SketchAggregation) agg))
+                .map(agg -> agg.isSketch() ? sketchConverter.asInnerSketch((SketchAggregation) agg) : agg)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 

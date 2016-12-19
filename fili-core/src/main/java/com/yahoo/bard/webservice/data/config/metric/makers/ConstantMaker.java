@@ -54,7 +54,8 @@ public class ConstantMaker extends MetricMaker {
             String message = String.format(
                     "%s value '%s' does not parse to a number",
                     metricName,
-                    dependentMetrics.get(0));
+                    dependentMetrics.get(0)
+            );
             LOG.error(message);
             throw new IllegalArgumentException(message, nfe);
         }

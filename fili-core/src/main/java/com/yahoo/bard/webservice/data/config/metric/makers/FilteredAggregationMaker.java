@@ -75,7 +75,7 @@ public class FilteredAggregationMaker extends MetricMaker {
      *
      * @return The aggregation used by this metric
      */
-    private Aggregation assertDependentIsAggregationMetric(final LogicalMetric sourceMetric) {
+    private Aggregation assertDependentIsAggregationMetric(LogicalMetric sourceMetric) {
         MetricField metricField = sourceMetric.getMetricField();
         if (!(metricField instanceof Aggregation)) {
             String message = String.format(
