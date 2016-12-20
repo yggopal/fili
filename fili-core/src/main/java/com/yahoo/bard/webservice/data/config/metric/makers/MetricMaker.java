@@ -10,6 +10,7 @@ import com.yahoo.bard.webservice.druid.model.aggregation.Aggregation;
 import com.yahoo.bard.webservice.druid.model.postaggregation.FieldAccessorPostAggregation;
 import com.yahoo.bard.webservice.druid.model.postaggregation.PostAggregation;
 import com.yahoo.bard.webservice.druid.model.postaggregation.SketchEstimatePostAggregation;
+import com.yahoo.bard.webservice.druid.model.postaggregation.ThetaSketchEstimatePostAggregation;
 import com.yahoo.bard.webservice.druid.util.FieldConverterSupplier;
 
 import org.slf4j.Logger;
@@ -218,6 +219,10 @@ public abstract class MetricMaker {
             return (PostAggregation) field;
         }
 
+        if (field instanceof ThetaSketchEstimatePostAggregation) {
+            return ((ThetaSketchEstimatePostAggregation) field).getField();
+        }
+        
         // Check for sketches, since we require them after this point
         if (!field.isSketch()) {
             String message = String.format("Field must be a sketch: %s but is: %s", fieldName, field);
