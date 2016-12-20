@@ -27,7 +27,7 @@ public abstract class RawAggregationMetricMaker extends MetricMaker {
      *
      * @param metrics  A mapping of metric names to the corresponding LogicalMetrics. Used to resolve metric names
      * when making the logical metric.
-     * @param aggregationFactory  A method to produce an aggregation from a name and field name
+     * @param aggregationFactory  Produce an aggregation from a name and field name
      */
     public RawAggregationMetricMaker(
             MetricDictionary metrics,
@@ -69,7 +69,7 @@ public abstract class RawAggregationMetricMaker extends MetricMaker {
      *
      * @return The result set mapper bound to a metric being produced by this maker.
      */
-    public ResultSetMapper getResultSetMapper(String metricName) {
+    protected ResultSetMapper getResultSetMapper(String metricName) {
         return NO_OP_MAPPER;
     }
 }

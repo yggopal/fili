@@ -163,12 +163,14 @@ Current
     * [JavaX Annotation API 1.2 -> 1.3](https://jcp.org/en/jsr/detail?id=250)
 
 ### Deprecated:
-- [Deprecated MetricMaker utility method in favor of using new field accesor on Metric](https://github.com/yahoo/fili/pull/124)
+- [Metric configuration deprecations](https://github.com/yahoo/fili/pull/124)
+    * Deprecated superfluous constructor of `FilteredAggregator` with superfluous argument 
+    * Deprecated MetricMaker utility method in favor of using new field accessor on Metric
 
 - [Deprecated MetricMaker.getDependentQuery lookup method in favor of simpler direct access](https://github.com/yahoo/fili/pull/124)
 
 - [Default DimensionColumn name to use apiName instead of physicalName](https://github.com/yahoo/fili/pull/115)
-    * Deprecated `TableUtils::getColumnNames(DataApiRequest, DruidAggregationQuery, PhysicalTable)` returning dimension physical name,
+    * Deprecated `TableUtils::getColumnNames(DataApiRequest, DruidAggregationQuery, PhysicalTable)` returning dimension physical ltername,
      in favor of `TableUtils::getColumnNames(DataApiRequest, DruidAggregationQuery)` returning dimension api name
     * Deprecated `DimensionColumn::DimensionColumn addNewDimensionColumn(Schema, Dimension, PhysicalTable)` in favor of
      `DimensionColumn::DimensionColumn addNewDimensionColumn(Schema, Dimension)` which uses api name instead of physical name as column identifier for columns

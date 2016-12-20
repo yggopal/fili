@@ -23,6 +23,8 @@ import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
 
+import java.util.function.Function
+
 class ArithmeticMakerSpec extends Specification {
     LogicalMetric dayAvgPageViewsPerTotalPageViews
     LogicalMetric dayAvgPageViewsPerTotalPageViewsRoundedUp
@@ -43,7 +45,7 @@ class ArithmeticMakerSpec extends Specification {
         ArithmeticMaker divisionMaker = new ArithmeticMaker(
                 metricDictionary,
                 ArithmeticPostAggregation.ArithmeticPostAggregationFunction.DIVIDE,
-                new NoOpResultSetMapper()
+                (Function) { String it -> return new NoOpResultSetMapper() }
         )
         ArithmeticMaker roundUpDivisionMaker = new ArithmeticMaker(
                 metricDictionary,
