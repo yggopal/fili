@@ -67,7 +67,9 @@ public class ArithmeticMaker extends MetricMaker {
 
         // Get the ArithmeticPostAggregation operands from the dependent metrics
         List<PostAggregation> operands = dependentMetrics.stream()
-                .map(this::getNumericField)
+                .map(metrics::get)
+                .map(LogicalMetric::getMetricField)
+                .map(MetricMaker::getNumericField)
                 .collect(Collectors.toList());
 
         // Create the ArithmeticPostAggregation

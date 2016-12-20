@@ -43,8 +43,8 @@ public class ThetaSketchSetOperationMaker extends MetricMaker {
         TemplateDruidQuery mergedQuery = getMergedQuery(dependentMetrics);
 
         // Get the ThetaSketchSetOperationPostAggregation operands from the dependent metrics
-        PostAggregation operandOne = getSketchField(dependentMetrics.get(0));
-        PostAggregation operandTwo = getSketchField(dependentMetrics.get(1));
+        PostAggregation operandOne = MetricMaker.getSketchField(metrics.get(dependentMetrics.get(0)).getMetricField());
+        PostAggregation operandTwo = MetricMaker.getSketchField(metrics.get(dependentMetrics.get(1)).getMetricField());
 
         // Create the ThetaSketchSetOperationPostAggregation
         ThetaSketchSetOperationPostAggregation setPostAggregation = new ThetaSketchSetOperationPostAggregation(
