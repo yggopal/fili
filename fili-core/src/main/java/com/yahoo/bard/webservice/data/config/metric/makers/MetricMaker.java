@@ -277,7 +277,7 @@ public abstract class MetricMaker {
         if (field instanceof ThetaSketchEstimatePostAggregation) {
             return ((ThetaSketchEstimatePostAggregation) field).getField();
         }
-        
+
         // Check for sketches, since we require them after this point
         if (!field.isSketch()) {
             String message = String.format("Field must be a sketch: %s but is: %s", field.getName(), field);

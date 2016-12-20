@@ -10,6 +10,8 @@ Current
 
 ### Added:
 
+- [Added comprehensive tests for `MetricMaker` field coercion methods](https://github.com/yahoo/fili/pull/128) 
+
 - [Added MetricField accessor to the interface of LogicalMetric](https://github.com/yahoo/fili/pull/124)
     * Previously accessing the metric field involved using three method calls
 
@@ -157,6 +159,11 @@ Current
     * [JavaX Annotation API 1.2 -> 1.3](https://jcp.org/en/jsr/detail?id=250)
 
 ### Deprecated:
+
+- [Moved to static implementations for numeric and sketch coercion helper methods](https://github.com/yahoo/fili/pull/128) 
+    * `MetricMaker.getSketchField(String fieldName)` rather use `MetricMaker.getSketchField(MetricField field)`
+    * `MetricMaker.getNumericField(String fieldName)` rather use `MetricMaker.getNumericField(MetricField field)`
+
 - [Deprecated MetricMaker utility method in favor of using new field accesor on Metric](https://github.com/yahoo/fili/pull/124)
 
 - [Deprecated MetricMaker.getDependentQuery lookup method in favor of simpler direct access](https://github.com/yahoo/fili/pull/124)
@@ -170,6 +177,8 @@ Current
      so `LogicalDimensionColumn` is no longer needed
 
 ### Fixed:
+
+- [Added missing coverage for `ThetaSketchEstimate` unwrapping in `MetricMaker.getSketchField`](https://github.com/yahoo/fili/pull/128) 
 
 - [`DataSource::getNames` now returns Fili identifiers, not fact store identifiers](https://github.com/yahoo/fili/pull/125/files)
 
