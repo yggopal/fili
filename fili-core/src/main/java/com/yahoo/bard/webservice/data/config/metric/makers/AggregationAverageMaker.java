@@ -43,7 +43,7 @@ import javax.validation.constraints.NotNull;
  * <ul>
  *    <li>an inner query constant one</li>
  *    <li>an inner query numeric aggregation or post aggregation field to sum</li>
- *    <li>and outer query sum of the constant to provide a row count</li>
+ *    <li>and outer query sum of the constant which provide a row count</li>
  *    <li>an outer query sum of the inner numeric summand</li>
  *    <li>finally, a post aggregation in the outer query dividing the sum by the count</li>
  * </ul>
@@ -168,11 +168,13 @@ public class AggregationAverageMaker extends MetricMaker {
 
     /**
      * Create an Aggregation for summing on a metric from an inner query.
-     * The base metric for this maker has a name in the request schema.  Daily average aggregates over the summand it
-     * creates in the inner query, which is based on the original metric name.  If the original metric field is also a
-     * sum, the outer aggregation of that metric and the outer aggregation of the daily average do not need to be
-     * distinguished.  However if the original metric field was aggregating on a non numeric type, the daily average
-     * will appeaed '_sum' to the original name for it's outer sum.
+     * <p>
+     * If the original metric that is being averaged is used together in a query with the averaging metric, then both
+     * the original aggregator name and the summing aggregator used by the average metric may appear together in the
+     * outer query. If they share the same name but different definitions, there would be a conflict.  This can arise
+     * if the original metric used a post aggregation or if it contained a non numeric (e.g. sketch) aggregation.
+     * <p>
+     * We use the convention of changing the name for the average summing aggregation by adding the suffix '_sum'.
      *
      * @param innerMetric  The metric on the inner query being summed
      *
