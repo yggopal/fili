@@ -4,6 +4,7 @@ package com.yahoo.bard.systemconfig
 
 class BardModuleSetupSpec extends ModuleSetupSpec {
 
+    @Override
     String getModuleName() {
         return "fili-core"
     }
