@@ -7,7 +7,6 @@ import com.yahoo.bard.webservice.data.metric.MetricDictionary;
 import com.yahoo.bard.webservice.data.metric.TemplateDruidQuery;
 import com.yahoo.bard.webservice.data.metric.mappers.ColumnMapper;
 import com.yahoo.bard.webservice.data.metric.mappers.ResultSetMapper;
-import com.yahoo.bard.webservice.data.metric.mappers.SketchRoundUpMapper;
 import com.yahoo.bard.webservice.druid.model.postaggregation.ArithmeticPostAggregation;
 import com.yahoo.bard.webservice.druid.model.postaggregation.ArithmeticPostAggregation.ArithmeticPostAggregationFunction;
 import com.yahoo.bard.webservice.druid.model.postaggregation.PostAggregation;
@@ -82,11 +81,10 @@ public class ArithmeticMaker extends MetricMaker {
      * @param function  The arithmetic operation performed by the LogicalMetrics constructed by this maker
      */
     public ArithmeticMaker(MetricDictionary metricDictionary, ArithmeticPostAggregationFunction function) {
-        // TODO: Deprecate me, mappers should always be specified at creation time, not implicitly
         this(
                 metricDictionary,
                 function,
-                (Function<String, ResultSetMapper>) SketchRoundUpMapper::new
+                (Function<String, ResultSetMapper>) (ignore) -> NO_OP_MAPPER
         );
     }
 
