@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class FilteredAggregationMaker extends MetricMaker {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(ConstantMaker.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(FilteredAggregationMaker.class);
 
     /**
      * The filter being applied to the metrics created.
