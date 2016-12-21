@@ -51,7 +51,9 @@ public class FilteredAggregation extends Aggregation {
      */
     @Deprecated
     public FilteredAggregation(@NotNull String name, String fieldName, Aggregation aggregation, Filter filter) {
-        this(name, aggregation, filter);
+        super(name, fieldName);
+        this.filter = filter;
+        this.aggregation = aggregation.withName(name).withFieldName(fieldName);
     }
 
     /**
