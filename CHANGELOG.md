@@ -41,6 +41,7 @@ Current
     * `ConstantMaker` now throws an `IllegalArgumentException` wrapping the raw NumberFormatException on a bad argument
     * `FilteredAggregation` no longer requires a metric name to be passed in. (Aggregation field name is used)
     * `FilteredAggregationMaker` now accepts a metric to the 'make' method instead of binding at construction time.
+    * `ArithmeticAggregationMaker` default now uses `NoOpResultSetMapper` instead of rounding mapper. (potentially breaking change)
 
 - [Used Metric Field accessor to simplify maker code](https://github.com/yahoo/fili/pull/124)
     * Using metric field accessor simplifies and enables streaminess in maker code
